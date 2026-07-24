@@ -569,11 +569,154 @@
     line-height: 1.5;
     margin-top: 0.7rem;
   }
+  .field-label{
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    margin: 0.6rem 0 0.3rem;
+    display: block;
+  }
+  .settings-group input[type="text"],
+  .settings-group input[type="password"]{
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.65rem;
+    color: var(--text);
+    font-size: 0.8rem;
+    font-family: 'Manrope', sans-serif;
+    outline: none;
+    transition: border-color 0.2s var(--ease);
+  }
+  .settings-group input[type="text"]:focus,
+  .settings-group input[type="password"]:focus{ border-color: var(--accent-soft); }
   .reset-row{
     margin-top: 1rem;
     padding-top: 0.9rem;
     border-top: 1px solid var(--border-soft);
   }
+
+  /* ---------- AI chat modal ---------- */
+  .ai-modal-overlay{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.32);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    z-index: 40;
+  }
+  .ai-modal-overlay[hidden]{ display: none; }
+  .ai-modal{
+    width: min(560px, 100%);
+    max-height: min(72vh, 640px);
+    display: flex;
+    flex-direction: column;
+    background: var(--panel-hover);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: rise 0.25s var(--ease) both;
+  }
+  .ai-modal-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.1rem;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    flex: 0 0 auto;
+  }
+  .ai-modal-close{
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: all 0.15s var(--ease);
+  }
+  .ai-modal-close:hover{ color: var(--text); background: var(--panel); }
+  .ai-messages{
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .ai-bubble{
+    max-width: 84%;
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--radius-md);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  .ai-bubble.user{
+    align-self: flex-end;
+    background: var(--accent-soft);
+    color: var(--text);
+    border-bottom-right-radius: 4px;
+  }
+  .ai-bubble.assistant{
+    align-self: flex-start;
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    color: var(--text-dim);
+    border-bottom-left-radius: 4px;
+  }
+  .ai-bubble.error{ color: var(--accent); }
+  .ai-chat-form{
+    flex: 0 0 auto;
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.85rem 1.1rem;
+    border-top: 1px solid var(--border-soft);
+  }
+  .ai-chat-form input{
+    flex: 1 1 auto;
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    padding: 0.55rem 0.9rem;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+  }
+  .ai-chat-form input:focus{ border-color: var(--accent-soft); }
+
+  .toast{
+    position: fixed;
+    bottom: 26px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--panel-hover);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--shadow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+    z-index: 50;
+  }
+  .toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
 
   @media (max-width: 560px){
     .widgets-grid{ grid-template-columns: 1fr; }
@@ -631,6 +774,29 @@
         <span class="switch-track"></span>
       </label>
     </div>
+  </div>
+
+  <h3>AI Assistant</h3>
+  <div class="settings-group">
+    <div class="toggle-row">
+      Use built-in chat
+      <label class="switch">
+        <input type="checkbox" id="toggleAiEnabled">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+    <span class="settings-label" style="margin-top:0.7rem;">Provider</span>
+    <div class="segmented" id="aiProviderSeg">
+      <button data-value="openai">OpenAI-compatible</button>
+      <button data-value="anthropic">Anthropic</button>
+    </div>
+    <span class="field-label">Endpoint</span>
+    <input type="text" id="aiEndpointInput" placeholder="https://api.openai.com/v1/chat/completions">
+    <span class="field-label">API key</span>
+    <input type="password" id="aiKeyInput" placeholder="sk-...">
+    <span class="field-label">Model</span>
+    <input type="text" id="aiModelInput" placeholder="gpt-4o-mini">
+    <p class="settings-hint">Stored only in a cookie on this page — never sent anywhere but the endpoint above. Leave this off and the AI pill falls back to Duck AI in a new tab.</p>
   </div>
 
   <div class="reset-row">
@@ -709,6 +875,21 @@
   </div>
 </main>
 
+<div class="ai-modal-overlay" id="aiModalOverlay" hidden>
+  <div class="ai-modal">
+    <div class="ai-modal-header">
+      <span id="aiModalTitle">AI Assistant</span>
+      <button class="ai-modal-close" id="aiModalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="ai-messages" id="aiMessages"></div>
+    <form class="ai-chat-form" id="aiChatForm" autocomplete="off">
+      <input type="text" id="aiChatInput" placeholder="Ask something…">
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
 (function(){
   "use strict";
@@ -775,7 +956,10 @@
     }
   });
   document.addEventListener("keydown", function(e){
-    if(e.key === "Escape") settingsPanel.setAttribute("hidden","");
+    if(e.key === "Escape"){
+      settingsPanel.setAttribute("hidden","");
+      closeAiModal();
+    }
     if(e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA" && !document.activeElement.isContentEditable){
       e.preventDefault();
       document.getElementById("searchInput").focus();
@@ -853,9 +1037,154 @@
     }
   });
 
-  /* AI pill — always routes to Duck AI (duck.ai), independent of the chosen search engine */
-  document.getElementById("aiButton").addEventListener("click", function(){
+  /* ---------- Toast ---------- */
+  var toastEl = document.getElementById("toast");
+  var toastTimer;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2600);
+  }
+
+  /* ---------- AI assistant settings ---------- */
+  var aiConfig = getJSON("zen_ai_config", { enabled: false, provider: "openai", endpoint: "", key: "", model: "" });
+  var aiDefaults = {
+    openai: { endpoint: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" },
+    anthropic: { endpoint: "https://api.anthropic.com/v1/messages", model: "claude-sonnet-4-5" }
+  };
+  var toggleAiEnabled = document.getElementById("toggleAiEnabled");
+  var aiProviderSeg = document.getElementById("aiProviderSeg");
+  var aiEndpointInput = document.getElementById("aiEndpointInput");
+  var aiKeyInput = document.getElementById("aiKeyInput");
+  var aiModelInput = document.getElementById("aiModelInput");
+  var aiButton = document.getElementById("aiButton");
+
+  function applyAiConfigToUI(){
+    toggleAiEnabled.checked = !!aiConfig.enabled;
+    document.querySelectorAll("#aiProviderSeg button").forEach(function(b){
+      b.classList.toggle("active", b.dataset.value === aiConfig.provider);
+    });
+    aiEndpointInput.value = aiConfig.endpoint || "";
+    aiEndpointInput.placeholder = (aiDefaults[aiConfig.provider] || aiDefaults.openai).endpoint;
+    aiKeyInput.value = aiConfig.key || "";
+    aiModelInput.value = aiConfig.model || "";
+    aiModelInput.placeholder = (aiDefaults[aiConfig.provider] || aiDefaults.openai).model;
+    aiButton.title = aiConfig.enabled && aiConfig.key ? "Ask your AI assistant" : "Ask Duck AI";
+  }
+  applyAiConfigToUI();
+
+  function saveAiConfig(){ setJSON("zen_ai_config", aiConfig); applyAiConfigToUI(); }
+
+  toggleAiEnabled.addEventListener("change", function(){ aiConfig.enabled = toggleAiEnabled.checked; saveAiConfig(); });
+  aiProviderSeg.addEventListener("click", function(e){
+    var btn = e.target.closest("button"); if(!btn) return;
+    aiConfig.provider = btn.dataset.value; saveAiConfig();
+  });
+  aiEndpointInput.addEventListener("input", function(){ aiConfig.endpoint = aiEndpointInput.value.trim(); setJSON("zen_ai_config", aiConfig); });
+  aiKeyInput.addEventListener("input", function(){ aiConfig.key = aiKeyInput.value.trim(); setJSON("zen_ai_config", aiConfig); });
+  aiModelInput.addEventListener("input", function(){ aiConfig.model = aiModelInput.value.trim(); setJSON("zen_ai_config", aiConfig); });
+
+  function aiIsConfigured(){ return !!(aiConfig.enabled && aiConfig.key); }
+
+  /* ---------- AI chat modal ---------- */
+  var aiModalOverlay = document.getElementById("aiModalOverlay");
+  var aiMessages = document.getElementById("aiMessages");
+  var aiChatForm = document.getElementById("aiChatForm");
+  var aiChatInput = document.getElementById("aiChatInput");
+  var chatHistory = []; // session-only, never persisted
+
+  function openAiModal(){
+    aiModalOverlay.removeAttribute("hidden");
+    aiChatInput.focus();
+  }
+  function closeAiModal(){
+    aiModalOverlay.setAttribute("hidden","");
+  }
+  aiModalOverlay.addEventListener("click", function(e){ if(e.target === aiModalOverlay) closeAiModal(); });
+  document.getElementById("aiModalClose").addEventListener("click", closeAiModal);
+
+  function renderBubble(role, text){
+    var div = document.createElement("div");
+    div.className = "ai-bubble " + role;
+    div.textContent = text;
+    aiMessages.appendChild(div);
+    aiMessages.scrollTop = aiMessages.scrollHeight;
+    return div;
+  }
+
+  async function callAI(messages){
+    if(aiConfig.provider === "anthropic"){
+      var res = await fetch(aiConfig.endpoint, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": aiConfig.key,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: aiConfig.model || aiDefaults.anthropic.model,
+          max_tokens: 1024,
+          messages: messages.map(function(m){ return { role: m.role, content: m.content }; })
+        })
+      });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      var data = await res.json();
+      return (data.content || []).map(function(b){ return b.text || ""; }).join("") || "(no response)";
+    }
+    var res2 = await fetch(aiConfig.endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "Authorization": "Bearer " + aiConfig.key
+      },
+      body: JSON.stringify({
+        model: aiConfig.model || aiDefaults.openai.model,
+        messages: messages
+      })
+    });
+    if(!res2.ok) throw new Error("HTTP " + res2.status);
+    var data2 = await res2.json();
+    return (data2.choices && data2.choices[0] && data2.choices[0].message && data2.choices[0].message.content) || "(no response)";
+  }
+
+  function sendAiMessage(text){
+    if(!text) return;
+    chatHistory.push({ role: "user", content: text });
+    renderBubble("user", text);
+    var placeholder = renderBubble("assistant", "…");
+    callAI(chatHistory).then(function(reply){
+      chatHistory.push({ role: "assistant", content: reply });
+      placeholder.textContent = reply;
+      aiMessages.scrollTop = aiMessages.scrollHeight;
+    }).catch(function(){
+      placeholder.textContent = "Couldn't reach the endpoint — check the API key and endpoint in settings.";
+      placeholder.classList.add("error");
+    });
+  }
+
+  aiChatForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var q = aiChatInput.value.trim();
+    if(!q) return;
+    aiChatInput.value = "";
+    sendAiMessage(q);
+  });
+
+  /* AI pill — uses the built-in chat if configured, otherwise hands the query to Duck AI */
+  aiButton.addEventListener("click", function(){
     var q = searchInput.value.trim();
+    if(aiIsConfigured()){
+      openAiModal();
+      if(q) sendAiMessage(q);
+      return;
+    }
+    if(q && navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(q).then(function(){
+        showToast("Copied — paste it in Duck AI if it isn't already there");
+      }).catch(function(){});
+    }
     window.location.href = q
       ? "https://duckduckgo.com/?q=" + encodeURIComponent(q) + "&ia=chat"
       : "https://duckduckgo.com/?ia=chat";
@@ -1000,7 +1329,7 @@
   /* ---------- Reset ---------- */
   document.getElementById("resetAll").addEventListener("click", function(){
     if(!confirm("Reset greeting, links, notes and settings on this page?")) return;
-    ["zen_theme","zen_ambient","zen_name","zen_engine","zen_widgets","zen_links","zen_notes"].forEach(function(name){
+    ["zen_theme","zen_ambient","zen_name","zen_engine","zen_widgets","zen_links","zen_notes","zen_ai_config"].forEach(function(name){
       setCookie(name, "", -1);
     });
     location.reload();
