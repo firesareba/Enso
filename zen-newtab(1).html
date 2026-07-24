@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ensō — New Tab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap');
+
+  /* ---------- Tokens ---------- */
+  :root{
+    --radius-lg: 22px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+    --ease: cubic-bezier(.22,.61,.36,1);
+  }
+  :root[data-theme="dark"]{
+    --bg-fallback: radial-gradient(ellipse 90% 70% at 50% -10%, #202730 0%, #0e1114 55%, #08090b 100%);
+    --panel: rgba(255,255,255,0.055);
+    --panel-hover: rgba(255,255,255,0.085);
+    --border: rgba(255,255,255,0.14);
+    --border-soft: rgba(255,255,255,0.08);
+    --text: #f2ece0;
+    --text-dim: rgba(242,236,224,0.60);
+    --text-faint: rgba(242,236,224,0.34);
+    --accent: #cf8158;
+    --accent-soft: rgba(207,129,88,0.30);
+    --moss: #93a687;
+    --shadow: 0 20px 60px -25px rgba(0,0,0,0.6);
+  }
+  :root[data-theme="light"]{
+    --bg-fallback: radial-gradient(ellipse 90% 70% at 50% -10%, #fbf8f1 0%, #f1ecdf 55%, #e8e0cd 100%);
+    --panel: rgba(30,26,20,0.05);
+    --panel-hover: rgba(30,26,20,0.08);
+    --border: rgba(30,26,20,0.13);
+    --border-soft: rgba(30,26,20,0.07);
+    --text: #221e18;
+    --text-dim: rgba(34,30,24,0.62);
+    --text-faint: rgba(34,30,24,0.36);
+    --accent: #b3603a;
+    --accent-soft: rgba(179,96,58,0.24);
+    --moss: #63765a;
+    --shadow: 0 20px 50px -30px rgba(0,0,0,0.25);
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{
+    height: 100%;
+    margin: 0;
+    background: transparent; /* left transparent by default so a browser's own
+                                  window transparency / blur (e.g. Zen's mica,
+                                  acrylic, or the Zen Internet extension's
+                                  transparency styling) shows straight through */
+  }
+  body[data-ambient="gradient"]{
+    background: var(--bg-fallback);
+    background-attachment: fixed;
+  }
+
+  body{
+    font-family: 'Manrope', sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  a{ color: inherit; }
+  button{ font-family: inherit; }
+
+  ::selection{ background: var(--accent-soft); color: var(--text); }
+
+  /* subtle scrollbar so it never looks like "chrome" */
+  ::-webkit-scrollbar{ width: 8px; }
+  ::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 8px; }
+  ::-webkit-scrollbar-track{ background: transparent; }
+
+  /* ---------- Layout shell ---------- */
+  .stage{
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 8vh 6vw 6vh;
+  }
+
+  /* ---------- Ensō signature mark ---------- */
+  .enso-wrap{
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin-bottom: -64px;
+    pointer-events: none;
+  }
+  .enso-wrap svg{
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .enso-stroke{
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    animation: draw-enso 1.7s var(--ease) forwards;
+  }
+  .enso-1{ opacity: 0.38; stroke-dasharray: 560; stroke-dashoffset: 560; animation-delay: 0.1s; }
+  .enso-2{ opacity: 0.30; stroke-dasharray: 380; stroke-dashoffset: 380; animation-delay: 0.35s; }
+  .enso-3{ opacity: 0.24; stroke-dasharray: 210; stroke-dashoffset: 210; animation-delay: 0.6s; }
+  @keyframes draw-enso{
+    to{ stroke-dashoffset: 0; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .enso-stroke{ animation: none; stroke-dashoffset: 0 !important; }
+  }
+
+  /* ---------- Clock / date ---------- */
+  .clock{
+    position: relative;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 500;
+    font-size: clamp(3rem, 9vw, 5.2rem);
+    letter-spacing: 0.02em;
+    line-height: 1;
+    z-index: 1;
+  }
+  .clock .colon{
+    display: inline-block;
+    animation: blink 2s step-start infinite;
+  }
+  @keyframes blink{ 50%{ opacity: 0.25; } }
+  @media (prefers-reduced-motion: reduce){ .clock .colon{ animation: none; } }
+
+  .date{
+    margin-top: 0.6rem;
+    font-size: 0.82rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  /* ---------- Greeting ---------- */
+  .greeting-row{
+    margin-top: 2.1rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    max-width: 90vw;
+  }
+  .greeting{
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 500;
+    font-size: clamp(1.4rem, 3vw, 1.85rem);
+    color: var(--text-dim);
+    outline: none;
+    border-bottom: 1px solid transparent;
+    padding: 2px 2px;
+    cursor: text;
+    transition: border-color 0.2s var(--ease);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80vw;
+  }
+  .greeting:hover, .greeting:focus{
+    border-color: var(--border);
+  }
+  .greeting:focus{
+    outline: none;
+    border-color: var(--accent-soft);
+  }
+
+  /* ---------- Search ---------- */
+  .search-block{
+    margin-top: 2.6rem;
+    width: min(640px, 88vw);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .search-row{
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    gap: 0.55rem;
+  }
+  .ai-pill{
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0 1.05rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    color: var(--text-dim);
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s var(--ease);
+  }
+  .ai-pill svg{ flex: 0 0 auto; transition: transform 0.3s var(--ease); }
+  .ai-pill:hover{
+    background: var(--panel-hover);
+    color: var(--accent);
+    border-color: var(--accent-soft);
+  }
+  .ai-pill:hover svg{ transform: rotate(18deg) scale(1.08); }
+  .ai-pill:active{ transform: scale(0.97); }
+
+  .search-pill{
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.3rem;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    box-shadow: var(--shadow);
+    transition: border-color 0.25s var(--ease), background 0.25s var(--ease);
+  }
+  .search-pill:focus-within{
+    border-color: var(--accent-soft);
+    background: var(--panel-hover);
+  }
+  .search-pill svg{
+    flex: 0 0 auto;
+    opacity: 0.55;
+  }
+  .search-pill input{
+    flex: 1 1 auto;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+  .search-pill input::placeholder{ color: var(--text-faint); }
+
+  .engine-row{
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .engine-select{
+    appearance: none;
+    background: transparent;
+    border: none;
+    color: var(--text-faint);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: color 0.2s var(--ease), background 0.2s var(--ease);
+  }
+  .engine-select:hover, .engine-select:focus{
+    color: var(--text-dim);
+    background: var(--panel);
+    outline: none;
+  }
+  .engine-select option{ color: #222; }
+
+  /* ---------- Widgets grid ---------- */
+  .widgets-grid{
+    margin-top: 3.4rem;
+    width: min(920px, 92vw);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1.1rem;
+    align-items: start;
+  }
+
+  .widget{
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    padding: 1.3rem 1.4rem;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow: var(--shadow);
+    animation: rise 0.6s var(--ease) both;
+  }
+  @keyframes rise{
+    from{ opacity: 0; transform: translateY(10px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .widget{ animation: none; }
+  }
+
+  .widget h2{
+    margin: 0 0 0.9rem;
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Quick links */
+  .links-list{
+    list-style: none;
+    margin: 0; padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .link-row{
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text-dim);
+    transition: background 0.2s var(--ease), color 0.2s var(--ease);
+  }
+  .link-row:hover{ background: var(--panel-hover); color: var(--text); }
+  .link-avatar{
+    flex: 0 0 auto;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--accent-soft);
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .link-label{
+    flex: 1 1 auto;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .link-remove{
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: opacity 0.15s var(--ease), color 0.15s var(--ease);
+  }
+  .link-row:hover .link-remove{ opacity: 1; }
+  .link-remove:hover{ color: var(--accent); background: var(--panel); }
+
+  .links-empty{
+    font-size: 0.85rem;
+    color: var(--text-faint);
+    padding: 0.3rem 0.5rem 0.6rem;
+  }
+
+  .add-link-form{
+    margin-top: 0.5rem;
+    display: none;
+    gap: 0.4rem;
+    flex-direction: column;
+  }
+  .add-link-form.open{ display: flex; }
+  .add-link-form input{
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.7rem;
+    color: var(--text);
+    font-size: 0.85rem;
+    outline: none;
+    font-family: 'Manrope', sans-serif;
+  }
+  .add-link-form input:focus{ border-color: var(--accent-soft); }
+  .add-link-actions{ display: flex; gap: 0.4rem; }
+
+  .ghost-btn{
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--text-faint);
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.7rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s var(--ease);
+  }
+  .ghost-btn:hover{ color: var(--text); border-color: var(--text-faint); }
+
+  .solid-btn{
+    background: var(--accent-soft);
+    border: 1px solid transparent;
+    color: var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s var(--ease);
+  }
+  .solid-btn:hover{ filter: brightness(1.12); }
+
+  .add-link-btn{
+    margin-top: 0.55rem;
+    width: 100%;
+    text-align: left;
+  }
+
+  /* Notes */
+  .notes-area{
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-dim);
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .notes-area::placeholder{ color: var(--text-faint); }
+
+  /* Quote */
+  .quote-text{
+    font-family: 'Shippori Mincho', serif;
+    font-size: 1.02rem;
+    line-height: 1.55;
+    color: var(--text-dim);
+    margin: 0 0 0.6rem;
+  }
+  .quote-attr{
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+
+  /* ---------- Settings ---------- */
+  .settings-toggle{
+    position: fixed;
+    top: 22px;
+    right: 22px;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    color: var(--text-faint);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    transition: all 0.2s var(--ease);
+    z-index: 20;
+  }
+  .settings-toggle:hover{ color: var(--text); background: var(--panel-hover); }
+
+  .settings-panel{
+    position: fixed;
+    top: 70px;
+    right: 22px;
+    width: 280px;
+    background: var(--panel-hover);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.2rem 1.3rem;
+    backdrop-filter: blur(26px) saturate(160%);
+    -webkit-backdrop-filter: blur(26px) saturate(160%);
+    box-shadow: var(--shadow);
+    z-index: 20;
+    transform-origin: top right;
+    transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
+  }
+  .settings-panel[hidden]{ display: none; }
+  .settings-panel h3{
+    margin: 0 0 0.8rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .settings-group{ margin-bottom: 1.05rem; }
+  .settings-group:last-child{ margin-bottom: 0; }
+  .settings-label{
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-bottom: 0.45rem;
+    display: block;
+  }
+  .segmented{
+    display: flex;
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .segmented button{
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-faint);
+    font-size: 0.75rem;
+    padding: 0.35rem 0;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s var(--ease);
+  }
+  .segmented button.active{
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .toggle-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .switch{
+    position: relative;
+    width: 36px; height: 20px;
+    flex: 0 0 auto;
+  }
+  .switch input{ opacity: 0; width: 0; height: 0; }
+  .switch-track{
+    position: absolute; inset: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s var(--ease);
+  }
+  .switch-track::before{
+    content: "";
+    position: absolute;
+    width: 14px; height: 14px;
+    left: 2px; top: 2px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    transition: transform 0.2s var(--ease), background 0.2s var(--ease);
+  }
+  .switch input:checked + .switch-track{ background: var(--accent-soft); }
+  .switch input:checked + .switch-track::before{
+    transform: translateX(16px);
+    background: var(--accent);
+  }
+  .settings-hint{
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    line-height: 1.5;
+    margin-top: 0.7rem;
+  }
+  .reset-row{
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  @media (max-width: 560px){
+    .widgets-grid{ grid-template-columns: 1fr; }
+    .settings-panel{ width: calc(100vw - 44px); right: 22px; }
+  }
+</style>
+</head>
+<body data-ambient="transparent">
+
+<button class="settings-toggle" id="settingsToggle" aria-label="Settings" aria-expanded="false">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+    <circle cx="12" cy="12" r="3.2"/>
+    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.04 1.56V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.36a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.64 15a1.7 1.7 0 0 0-1.56-1.04H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.64c.6-.24 1.02-.79 1.04-1.42V3a2 2 0 0 1 4 0v.09c.02.63.44 1.18 1.04 1.42.66.27 1.42.13 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06c-.47.45-.61 1.21-.34 1.87.24.6.79 1.02 1.42 1.04H21a2 2 0 0 1 0 4h-.09c-.63.02-1.18.44-1.42 1.04Z"/>
+  </svg>
+</button>
+
+<div class="settings-panel" id="settingsPanel" hidden>
+  <h3>Appearance</h3>
+  <div class="settings-group">
+    <span class="settings-label">Theme</span>
+    <div class="segmented" id="themeSeg">
+      <button data-value="dark">Ink</button>
+      <button data-value="light">Washi</button>
+    </div>
+  </div>
+  <div class="settings-group">
+    <span class="settings-label">Background</span>
+    <div class="segmented" id="ambientSeg">
+      <button data-value="transparent">Transparent</button>
+      <button data-value="gradient">Soft gradient</button>
+    </div>
+    <p class="settings-hint">Transparent leaves this page's background empty so Zen's own window transparency (Mica / Acrylic, or the Zen Internet extension) shows through. Pick Soft gradient if you're not running those.</p>
+  </div>
+
+  <h3>Widgets</h3>
+  <div class="settings-group">
+    <div class="toggle-row">
+      Quick links
+      <label class="switch">
+        <input type="checkbox" id="toggleLinks">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      Notes
+      <label class="switch">
+        <input type="checkbox" id="toggleNotes">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      Daily line
+      <label class="switch">
+        <input type="checkbox" id="toggleQuote">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="reset-row">
+    <button class="ghost-btn" id="resetAll" style="width:100%;">Reset everything</button>
+  </div>
+</div>
+
+<main class="stage">
+  <div class="enso-wrap" aria-hidden="true">
+    <svg viewBox="0 0 200 200">
+      <path class="enso-stroke enso-1" d="M 100 22 C 145 24 178 60 178 102 C 178 146 142 180 98 179 C 56 178 23 143 24 100 C 25 62 55 26 100 22" />
+      <path class="enso-stroke enso-2" d="M 100 46 C 131 47 154 72 154 101 C 154 132 129 155 99 155 C 70 154 47 130 47 100 C 48 74 69 49 100 46" />
+      <path class="enso-stroke enso-3" d="M 100 70 C 117 71 130 85 130 101 C 130 118 116 131 99 130 C 83 130 70 117 71 100 C 71 85 83 72 100 70" />
+    </svg>
+  </div>
+
+  <div class="clock" id="clock">--<span class="colon">:</span>--</div>
+  <div class="date" id="date">&nbsp;</div>
+
+  <div class="greeting-row">
+    <h1 class="greeting" id="greeting" contenteditable="true" spellcheck="false" title="Click to edit"></h1>
+  </div>
+
+  <form class="search-block" id="searchForm" autocomplete="off">
+    <div class="search-row">
+      <div class="search-pill">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="11" cy="11" r="7"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search, or press Enter to visit a site &nbsp;·&nbsp; press / to focus" autofocus>
+      </div>
+      <button type="button" class="ai-pill" id="aiButton" title="Ask Duck AI">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2.5c.55 4.1 2.3 6.4 6.4 7-4.1.55-6.4 2.3-7 6.4-.55-4.1-2.3-6.4-6.4-7 4.1-.55 6.4-2.3 7-6.4z"/>
+        </svg>
+        <span>AI</span>
+      </button>
+    </div>
+    <div class="engine-row">
+      <select class="engine-select" id="engineSelect">
+        <option value="google">Google</option>
+        <option value="duckduckgo">DuckDuckGo</option>
+        <option value="bing">Bing</option>
+        <option value="startpage">Startpage</option>
+        <option value="kagi">Kagi</option>
+      </select>
+    </div>
+  </form>
+
+  <div class="widgets-grid" id="widgetsGrid">
+    <section class="widget" id="widgetLinks" data-widget="links">
+      <h2>Quick Links</h2>
+      <ul class="links-list" id="linksList"></ul>
+      <button class="ghost-btn add-link-btn" id="addLinkBtn">+ Add a link</button>
+      <div class="add-link-form" id="addLinkForm">
+        <input type="text" id="linkName" placeholder="Name">
+        <input type="text" id="linkUrl" placeholder="URL (e.g. mail.google.com)">
+        <div class="add-link-actions">
+          <button type="button" class="solid-btn" id="saveLinkBtn">Save</button>
+          <button type="button" class="ghost-btn" id="cancelLinkBtn">Cancel</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="widget" id="widgetNotes" data-widget="notes">
+      <h2>Notes</h2>
+      <textarea class="notes-area" id="notesArea" placeholder="Jot something down — it stays here."></textarea>
+    </section>
+
+    <section class="widget" id="widgetQuote" data-widget="quote">
+      <h2>Today</h2>
+      <p class="quote-text" id="quoteText"></p>
+      <p class="quote-attr" id="quoteAttr"></p>
+    </section>
+  </div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Cookie helpers ---------- */
+  function setCookie(name, value, days){
+    days = days || 365;
+    var expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + "=" + encodeURIComponent(value) + "; expires=" + expires + "; path=/; SameSite=Lax";
+  }
+  function getCookie(name){
+    var match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+  function getJSON(name, fallback){
+    var raw = getCookie(name);
+    if(!raw) return fallback;
+    try{ return JSON.parse(raw); } catch(e){ return fallback; }
+  }
+  function setJSON(name, obj){ setCookie(name, JSON.stringify(obj)); }
+
+  var root = document.documentElement;
+  var body = document.body;
+
+  /* ---------- Theme & ambient ---------- */
+  function applyTheme(t){
+    root.setAttribute("data-theme", t);
+    document.querySelectorAll("#themeSeg button").forEach(function(b){
+      b.classList.toggle("active", b.dataset.value === t);
+    });
+  }
+  function applyAmbient(a){
+    body.setAttribute("data-ambient", a);
+    document.querySelectorAll("#ambientSeg button").forEach(function(b){
+      b.classList.toggle("active", b.dataset.value === a);
+    });
+  }
+  var theme = getCookie("zen_theme") || "dark";
+  var ambient = getCookie("zen_ambient") || "transparent";
+  applyTheme(theme);
+  applyAmbient(ambient);
+
+  document.getElementById("themeSeg").addEventListener("click", function(e){
+    var btn = e.target.closest("button"); if(!btn) return;
+    theme = btn.dataset.value; applyTheme(theme); setCookie("zen_theme", theme);
+  });
+  document.getElementById("ambientSeg").addEventListener("click", function(e){
+    var btn = e.target.closest("button"); if(!btn) return;
+    ambient = btn.dataset.value; applyAmbient(ambient); setCookie("zen_ambient", ambient);
+  });
+
+  /* ---------- Settings panel open/close ---------- */
+  var settingsToggle = document.getElementById("settingsToggle");
+  var settingsPanel = document.getElementById("settingsPanel");
+  settingsToggle.addEventListener("click", function(e){
+    e.stopPropagation();
+    var open = settingsPanel.hasAttribute("hidden");
+    if(open){ settingsPanel.removeAttribute("hidden"); } else { settingsPanel.setAttribute("hidden",""); }
+    settingsToggle.setAttribute("aria-expanded", String(open));
+  });
+  document.addEventListener("click", function(e){
+    if(!settingsPanel.contains(e.target) && e.target !== settingsToggle){
+      settingsPanel.setAttribute("hidden","");
+    }
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape") settingsPanel.setAttribute("hidden","");
+    if(e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA" && !document.activeElement.isContentEditable){
+      e.preventDefault();
+      document.getElementById("searchInput").focus();
+    }
+  });
+
+  /* ---------- Clock & date ---------- */
+  var clockEl = document.getElementById("clock");
+  var dateEl = document.getElementById("date");
+  function pad(n){ return n < 10 ? "0" + n : n; }
+  function tick(){
+    var now = new Date();
+    var h = now.getHours(), m = now.getMinutes();
+    clockEl.innerHTML = pad(h) + '<span class="colon">:</span>' + pad(m);
+    dateEl.textContent = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  }
+  tick();
+  setInterval(tick, 1000 * 10);
+
+  /* ---------- Greeting ---------- */
+  var greetingEl = document.getElementById("greeting");
+  function timeGreeting(){
+    var h = new Date().getHours();
+    if(h < 5) return "Still up";
+    if(h < 12) return "Good morning";
+    if(h < 17) return "Good afternoon";
+    if(h < 21) return "Good evening";
+    return "Good night";
+  }
+  var savedName = getCookie("zen_name");
+  greetingEl.textContent = timeGreeting() + (savedName ? ", " + savedName : "");
+  greetingEl.addEventListener("focus", function(){
+    // On focus, drop to just the name portion for easy editing
+    if(savedName) greetingEl.textContent = savedName;
+    else greetingEl.textContent = "";
+  });
+  function commitGreeting(){
+    var val = greetingEl.textContent.replace(/\s+/g," ").trim();
+    savedName = val;
+    if(val){ setCookie("zen_name", val); } else { setCookie("zen_name", "", -1); }
+    greetingEl.textContent = timeGreeting() + (savedName ? ", " + savedName : "");
+  }
+  greetingEl.addEventListener("blur", commitGreeting);
+  greetingEl.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); greetingEl.blur(); }
+  });
+
+  /* ---------- Search ---------- */
+  var engines = {
+    google: "https://www.google.com/search?q=",
+    duckduckgo: "https://duckduckgo.com/?q=",
+    bing: "https://www.bing.com/search?q=",
+    startpage: "https://www.startpage.com/sp/search?query=",
+    kagi: "https://kagi.com/search?q="
+  };
+  var engineSelect = document.getElementById("engineSelect");
+  engineSelect.value = getCookie("zen_engine") || "google";
+  engineSelect.addEventListener("change", function(){ setCookie("zen_engine", engineSelect.value); });
+
+  var searchForm = document.getElementById("searchForm");
+  var searchInput = document.getElementById("searchInput");
+  function looksLikeUrl(q){
+    if(/^https?:\/\//i.test(q)) return true;
+    return /^[a-z0-9.-]+\.[a-z]{2,}(\/.*)?$/i.test(q.trim()) && !q.includes(" ");
+  }
+  searchForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var q = searchInput.value.trim();
+    if(!q) return;
+    if(looksLikeUrl(q)){
+      window.location.href = /^https?:\/\//i.test(q) ? q : "https://" + q;
+    } else {
+      var base = engines[engineSelect.value] || engines.google;
+      window.location.href = base + encodeURIComponent(q);
+    }
+  });
+
+  /* AI pill — always routes to Duck AI (duck.ai), independent of the chosen search engine */
+  document.getElementById("aiButton").addEventListener("click", function(){
+    var q = searchInput.value.trim();
+    window.location.href = q
+      ? "https://duckduckgo.com/?q=" + encodeURIComponent(q) + "&ia=chat"
+      : "https://duckduckgo.com/?ia=chat";
+  });
+
+  /* ---------- Widget visibility ---------- */
+  var widgetPrefs = getJSON("zen_widgets", { links: true, notes: true, quote: true });
+  function applyWidgetPrefs(){
+    document.getElementById("widgetLinks").style.display = widgetPrefs.links ? "" : "none";
+    document.getElementById("widgetNotes").style.display = widgetPrefs.notes ? "" : "none";
+    document.getElementById("widgetQuote").style.display = widgetPrefs.quote ? "" : "none";
+    document.getElementById("toggleLinks").checked = !!widgetPrefs.links;
+    document.getElementById("toggleNotes").checked = !!widgetPrefs.notes;
+    document.getElementById("toggleQuote").checked = !!widgetPrefs.quote;
+  }
+  applyWidgetPrefs();
+  ["links","notes","quote"].forEach(function(key){
+    document.getElementById("toggle" + key[0].toUpperCase() + key.slice(1)).addEventListener("change", function(e){
+      widgetPrefs[key] = e.target.checked;
+      setJSON("zen_widgets", widgetPrefs);
+      applyWidgetPrefs();
+    });
+  });
+
+  /* ---------- Quick links ---------- */
+  var linksList = document.getElementById("linksList");
+  var links = getJSON("zen_links", []);
+  function faviconLetter(name){ return (name || "?").trim().charAt(0).toUpperCase() || "?"; }
+  function normalizeUrl(u){
+    u = u.trim();
+    if(!u) return "";
+    if(!/^https?:\/\//i.test(u)) u = "https://" + u;
+    return u;
+  }
+  function renderLinks(){
+    linksList.innerHTML = "";
+    if(links.length === 0){
+      var empty = document.createElement("li");
+      empty.className = "links-empty";
+      empty.textContent = "No links yet — add your first below.";
+      linksList.appendChild(empty);
+      return;
+    }
+    links.forEach(function(link, idx){
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      a.className = "link-row";
+      a.href = link.url;
+      var avatar = document.createElement("span");
+      avatar.className = "link-avatar";
+      avatar.textContent = faviconLetter(link.name);
+      var label = document.createElement("span");
+      label.className = "link-label";
+      label.textContent = link.name;
+      var remove = document.createElement("button");
+      remove.className = "link-remove";
+      remove.type = "button";
+      remove.textContent = "✕";
+      remove.title = "Remove";
+      remove.addEventListener("click", function(e){
+        e.preventDefault(); e.stopPropagation();
+        links.splice(idx, 1);
+        setJSON("zen_links", links);
+        renderLinks();
+      });
+      a.appendChild(avatar);
+      a.appendChild(label);
+      a.appendChild(remove);
+      li.appendChild(a);
+      linksList.appendChild(li);
+    });
+  }
+  renderLinks();
+
+  var addLinkBtn = document.getElementById("addLinkBtn");
+  var addLinkForm = document.getElementById("addLinkForm");
+  var linkName = document.getElementById("linkName");
+  var linkUrl = document.getElementById("linkUrl");
+  addLinkBtn.addEventListener("click", function(){
+    addLinkForm.classList.add("open");
+    addLinkBtn.style.display = "none";
+    linkName.focus();
+  });
+  document.getElementById("cancelLinkBtn").addEventListener("click", function(){
+    addLinkForm.classList.remove("open");
+    addLinkBtn.style.display = "";
+    linkName.value = ""; linkUrl.value = "";
+  });
+  document.getElementById("saveLinkBtn").addEventListener("click", function(){
+    var name = linkName.value.trim();
+    var url = normalizeUrl(linkUrl.value);
+    if(!name || !url) return;
+    links.push({ name: name, url: url });
+    setJSON("zen_links", links);
+    renderLinks();
+    linkName.value = ""; linkUrl.value = "";
+    addLinkForm.classList.remove("open");
+    addLinkBtn.style.display = "";
+  });
+  [linkName, linkUrl].forEach(function(inp){
+    inp.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ e.preventDefault(); document.getElementById("saveLinkBtn").click(); }
+    });
+  });
+
+  /* ---------- Notes ---------- */
+  var notesArea = document.getElementById("notesArea");
+  notesArea.value = getCookie("zen_notes") || "";
+  var notesTimer;
+  notesArea.addEventListener("input", function(){
+    clearTimeout(notesTimer);
+    notesTimer = setTimeout(function(){ setCookie("zen_notes", notesArea.value); }, 500);
+  });
+
+  /* ---------- Daily line ---------- */
+  var lines = [
+    ["Empty your cup, so it can be filled.", "old proverb"],
+    ["The obstacle is the path.", "zen saying"],
+    ["Sit quietly, do nothing, spring comes and the grass grows by itself.", "zen saying"],
+    ["Before enlightenment, chop wood, carry water. After enlightenment, chop wood, carry water.", "zen saying"],
+    ["A journey of a thousand miles begins with a single step.", "attributed to Laozi"],
+    ["When walking, walk. When eating, eat.", "zen saying"],
+    ["The quieter you become, the more you can hear.", "zen saying"],
+    ["Wherever you are, be there totally.", "zen saying"],
+    ["This too is temporary.", "on impermanence"],
+    ["Let go, or be dragged.", "zen saying"],
+    ["Not knowing is most intimate.", "zen koan"],
+    ["The mind is everything. What you think you become.", "attributed to the Buddha"],
+    ["No mud, no lotus.", "zen saying"],
+    ["Slow down, you're already there.", "on presence"],
+    ["Fall down seven times, stand up eight.", "old proverb"]
+  ];
+  function dayOfYear(d){
+    var start = new Date(d.getFullYear(), 0, 0);
+    var diff = d - start;
+    return Math.floor(diff / 864e5);
+  }
+  var pick = lines[dayOfYear(new Date()) % lines.length];
+  document.getElementById("quoteText").textContent = "\u201C" + pick[0] + "\u201D";
+  document.getElementById("quoteAttr").textContent = "— " + pick[1];
+
+  /* ---------- Reset ---------- */
+  document.getElementById("resetAll").addEventListener("click", function(){
+    if(!confirm("Reset greeting, links, notes and settings on this page?")) return;
+    ["zen_theme","zen_ambient","zen_name","zen_engine","zen_widgets","zen_links","zen_notes"].forEach(function(name){
+      setCookie(name, "", -1);
+    });
+    location.reload();
+  });
+
+})();
+</script>
+</body>
+</html>
