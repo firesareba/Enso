@@ -569,6 +569,7 @@
     line-height: 1.5;
     margin-top: 0.7rem;
   }
+  .settings-hint a{ color: var(--accent); }
   .field-label{
     font-size: 0.72rem;
     color: var(--text-faint);
@@ -788,7 +789,7 @@
     <span class="settings-label" style="margin-top:0.7rem;">Provider</span>
     <div class="segmented" id="aiProviderSeg">
       <button data-value="openai">OpenAI-compatible</button>
-      <button data-value="anthropic">Anthropic</button>
+      <button data-value="gemini">Gemini</button>
     </div>
     <span class="field-label">Endpoint</span>
     <input type="text" id="aiEndpointInput" placeholder="https://api.openai.com/v1/chat/completions">
@@ -796,7 +797,7 @@
     <input type="password" id="aiKeyInput" placeholder="sk-...">
     <span class="field-label">Model</span>
     <input type="text" id="aiModelInput" placeholder="gpt-4o-mini">
-    <p class="settings-hint">Stored only in a cookie on this page — never sent anywhere but the endpoint above. Leave this off and the AI pill falls back to Duck AI in a new tab.</p>
+    <p class="settings-hint">Stored only in a cookie on this page — never sent anywhere but the endpoint above. Get a free Gemini key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Leave this off and the AI pill falls back to Duck AI in a new tab.</p>
   </div>
 
   <div class="reset-row">
@@ -1051,7 +1052,7 @@
   var aiConfig = getJSON("zen_ai_config", { enabled: false, provider: "openai", endpoint: "", key: "", model: "" });
   var aiDefaults = {
     openai: { endpoint: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" },
-    anthropic: { endpoint: "https://api.anthropic.com/v1/messages", model: "claude-sonnet-4-5" }
+    gemini: { endpoint: "https://generativelanguage.googleapis.com/v1beta/models", model: "gemini-flash-lite-latest" }
   };
   var toggleAiEnabled = document.getElementById("toggleAiEnabled");
   var aiProviderSeg = document.getElementById("aiProviderSeg");
@@ -1114,26 +1115,29 @@
   }
 
   async function callAI(messages){
-    if(aiConfig.provider === "anthropic"){
-      var res = await fetch(aiConfig.endpoint, {
+    if(aiConfig.provider === "gemini"){
+      var base = (aiConfig.endpoint || aiDefaults.gemini.endpoint).replace(/\/$/, "");
+      var model = aiConfig.model || aiDefaults.gemini.model;
+      var url = base + "/" + model + ":generateContent";
+      var res = await fetch(url, {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-api-key": aiConfig.key,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true"
+          "x-goog-api-key": aiConfig.key
         },
         body: JSON.stringify({
-          model: aiConfig.model || aiDefaults.anthropic.model,
-          max_tokens: 1024,
-          messages: messages.map(function(m){ return { role: m.role, content: m.content }; })
+          contents: messages.map(function(m){
+            return { role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] };
+          })
         })
       });
       if(!res.ok) throw new Error("HTTP " + res.status);
       var data = await res.json();
-      return (data.content || []).map(function(b){ return b.text || ""; }).join("") || "(no response)";
+      var candidate = data.candidates && data.candidates[0];
+      var parts = (candidate && candidate.content && candidate.content.parts) || [];
+      return parts.map(function(p){ return p.text || ""; }).join("") || "(no response)";
     }
-    var res2 = await fetch(aiConfig.endpoint, {
+    var res2 = await fetch(aiConfig.endpoint || aiDefaults.openai.endpoint, {
       method: "POST",
       headers: {
         "content-type": "application/json",
