@@ -50,4 +50,4 @@ Everything lives in one file, so it's easy to tweak:
 
 ## License
 
-Use it, fork it, reshape it for your own setup.
+Use it, fork it, reshape it for your own setup. But whatever you do, DON'T FORK IT, CHANGE IT A TINY BIT, AND MAKE MONEY OFF OF IT! Forks CANNOT CONTAIN ADS! Forks must not be used for commercial purposes. Ur welcome! 
