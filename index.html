@@ -130,6 +130,15 @@
     display: inline-block;
     animation: blink 2s step-start infinite;
   }
+  .clock .period{
+    font-family: 'Manrope', sans-serif;
+    font-size: 0.28em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-left: 0.28em;
+    color: var(--text-faint);
+    vertical-align: super;
+  }
   @keyframes blink{ 50%{ opacity: 0.25; } }
   @media (prefers-reduced-motion: reduce){ .clock .colon{ animation: none; } }
 
@@ -205,14 +214,28 @@
     cursor: pointer;
     transition: all 0.2s var(--ease);
   }
-  .ai-pill svg{ flex: 0 0 auto; transition: transform 0.3s var(--ease); }
+  .ai-pill svg,
+  .ai-pill .ai-star-icon{
+    flex: 0 0 auto;
+    width: 15px;
+    height: 15px;
+    display: block;
+    transition: transform 0.3s var(--ease);
+  }
   .ai-pill:hover{
     background: var(--panel-hover);
     color: var(--accent);
     border-color: var(--accent-soft);
   }
-  .ai-pill:hover svg{ transform: rotate(18deg) scale(1.08); }
+  .ai-pill:hover svg,
+  .ai-pill:hover .ai-star-icon{ transform: rotate(18deg) scale(1.08); }
   .ai-pill:active{ transform: scale(0.97); }
+  .ai-star-fallback{
+    width: auto !important;
+    height: auto !important;
+    font-size: 0.95rem;
+    line-height: 1;
+  }
 
   .search-pill{
     flex: 1 1 auto;
@@ -314,69 +337,101 @@
     justify-content: space-between;
   }
 
-  /* Quick links */
-  .links-list{
-    list-style: none;
-    margin: 0; padding: 0;
+  /* Quick links — a symmetric strip of icon tiles below Notes / Today */
+  .links-strip{
+    margin-top: 1.1rem;
+    width: min(920px, 92vw);
+  }
+  .links-tiles{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+  .link-tile{
+    position: relative;
+    flex: 0 0 auto;
+    width: 84px;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-  }
-  .link-row{
-    display: flex;
     align-items: center;
-    gap: 0.65rem;
-    padding: 0.4rem 0.5rem;
-    border-radius: var(--radius-sm);
+    gap: 0.45rem;
+    padding: 0.75rem 0.4rem 0.6rem;
+    border-radius: var(--radius-md);
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
     text-decoration: none;
     color: var(--text-dim);
-    transition: background 0.2s var(--ease), color 0.2s var(--ease);
+    transition: background 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.2s var(--ease);
   }
-  .link-row:hover{ background: var(--panel-hover); color: var(--text); }
-  .link-avatar{
-    flex: 0 0 auto;
-    width: 26px; height: 26px;
-    border-radius: 50%;
+  .link-tile:hover{
+    background: var(--panel-hover);
+    border-color: var(--border);
+    color: var(--text);
+    transform: translateY(-2px);
+  }
+  .link-tile-icon{
+    width: 30px; height: 30px;
+    border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.72rem;
+    background: var(--panel-hover);
+    overflow: hidden;
+  }
+  .link-tile-icon img{
+    width: 20px; height: 20px;
+    display: block;
+  }
+  .link-tile-icon .fallback-letter{
+    display: none;
+    width: 100%; height: 100%;
+    align-items: center; justify-content: center;
+    font-size: 0.78rem;
     font-weight: 700;
     background: var(--accent-soft);
     color: var(--accent);
     text-transform: uppercase;
   }
-  .link-label{
-    flex: 1 1 auto;
-    font-size: 0.9rem;
+  .link-tile-label{
+    font-size: 0.7rem;
+    text-align: center;
+    max-width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .link-remove{
+  .link-tile-remove{
+    position: absolute;
+    top: 4px; right: 4px;
     opacity: 0;
-    background: none;
-    border: none;
+    width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--panel-hover);
+    border: 1px solid var(--border-soft);
+    border-radius: 50%;
     color: var(--text-faint);
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.65rem;
     line-height: 1;
-    padding: 2px 6px;
-    border-radius: 6px;
     transition: opacity 0.15s var(--ease), color 0.15s var(--ease);
   }
-  .link-row:hover .link-remove{ opacity: 1; }
-  .link-remove:hover{ color: var(--accent); background: var(--panel); }
+  .link-tile:hover .link-tile-remove{ opacity: 1; }
+  .link-tile-remove:hover{ color: var(--accent); }
 
-  .links-empty{
-    font-size: 0.85rem;
+  .add-tile{
+    background: transparent;
+    border: 1px dashed var(--border);
     color: var(--text-faint);
-    padding: 0.3rem 0.5rem 0.6rem;
+    cursor: pointer;
+    font-family: 'Manrope', sans-serif;
   }
+  .add-tile:hover{ color: var(--text); border-color: var(--text-faint); }
+  .add-tile .link-tile-icon{ background: transparent; font-size: 1.2rem; }
 
   .add-link-form{
-    margin-top: 0.5rem;
+    margin-top: 0.9rem;
     display: none;
     gap: 0.4rem;
     flex-direction: column;
+    max-width: 320px;
   }
   .add-link-form.open{ display: flex; }
   .add-link-form input{
@@ -417,12 +472,6 @@
   }
   .solid-btn:hover{ filter: brightness(1.12); }
 
-  .add-link-btn{
-    margin-top: 0.55rem;
-    width: 100%;
-    text-align: left;
-  }
-
   /* Notes */
   .notes-area{
     width: 100%;
@@ -451,6 +500,47 @@
     letter-spacing: 0.06em;
     color: var(--text-faint);
   }
+
+  /* Calendar */
+  .calendar-list{
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .calendar-day-label{
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 0.35rem;
+  }
+  .calendar-day-group + .calendar-day-group{ margin-top: 0.3rem; }
+  .calendar-event{
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    padding: 0.25rem 0;
+    font-size: 0.85rem;
+    color: var(--text-dim);
+  }
+  .calendar-event-time{
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    min-width: 3.4em;
+  }
+  .calendar-event-title{
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .calendar-empty, .calendar-loading, .calendar-error{
+    font-size: 0.82rem;
+    color: var(--text-faint);
+    line-height: 1.5;
+  }
+  .calendar-error{ color: var(--accent); }
 
   /* ---------- Settings ---------- */
   .settings-toggle{
@@ -591,6 +681,20 @@
   }
   .settings-group input[type="text"]:focus,
   .settings-group input[type="password"]:focus{ border-color: var(--accent-soft); }
+  .ai-btn-row{
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+  .ai-btn-row button{ flex: 1 1 auto; }
+  .ai-test-status{
+    font-size: 0.72rem;
+    line-height: 1.4;
+    margin: 0.5rem 0 0;
+    min-height: 1em;
+  }
+  .ai-test-status.ok{ color: var(--moss); }
+  .ai-test-status.error{ color: var(--accent); }
   .reset-row{
     margin-top: 1rem;
     padding-top: 0.9rem;
@@ -661,14 +765,14 @@
     padding: 0.6rem 0.85rem;
     border-radius: var(--radius-md);
     font-size: 0.88rem;
-    line-height: 1.5;
-    white-space: pre-wrap;
+    line-height: 1.55;
   }
   .ai-bubble.user{
     align-self: flex-end;
     background: var(--accent-soft);
     color: var(--text);
     border-bottom-right-radius: 4px;
+    white-space: pre-wrap;
   }
   .ai-bubble.assistant{
     align-self: flex-start;
@@ -677,7 +781,55 @@
     color: var(--text-dim);
     border-bottom-left-radius: 4px;
   }
-  .ai-bubble.error{ color: var(--accent); }
+  .ai-bubble.error{ color: var(--accent); white-space: pre-wrap; }
+
+  /* Rendered markdown + LaTeX inside assistant bubbles */
+  .ai-bubble.assistant > *:first-child{ margin-top: 0; }
+  .ai-bubble.assistant > *:last-child{ margin-bottom: 0; }
+  .ai-bubble.assistant p,
+  .ai-bubble.assistant ul,
+  .ai-bubble.assistant ol,
+  .ai-bubble.assistant pre,
+  .ai-bubble.assistant blockquote,
+  .ai-bubble.assistant table{ margin: 0 0 0.6em; }
+  .ai-bubble.assistant h1,
+  .ai-bubble.assistant h2,
+  .ai-bubble.assistant h3{
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 500;
+    margin: 0.2em 0 0.4em;
+    color: var(--text);
+  }
+  .ai-bubble.assistant ul, .ai-bubble.assistant ol{ padding-left: 1.25em; }
+  .ai-bubble.assistant li{ margin-bottom: 0.2em; }
+  .ai-bubble.assistant code{
+    background: var(--panel-hover);
+    padding: 0.1em 0.4em;
+    border-radius: 5px;
+    font-size: 0.85em;
+    font-family: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+  .ai-bubble.assistant pre{
+    background: var(--panel-hover);
+    border: 1px solid var(--border-soft);
+    padding: 0.7em 0.85em;
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
+  }
+  .ai-bubble.assistant pre code{ background: none; padding: 0; }
+  .ai-bubble.assistant a{ color: var(--accent); }
+  .ai-bubble.assistant blockquote{
+    border-left: 2px solid var(--border);
+    padding-left: 0.7em;
+    color: var(--text-faint);
+  }
+  .ai-bubble.assistant table{ border-collapse: collapse; font-size: 0.85em; }
+  .ai-bubble.assistant th, .ai-bubble.assistant td{
+    border: 1px solid var(--border-soft);
+    padding: 0.3em 0.55em;
+  }
+  .ai-bubble.assistant .katex{ font-size: 1.02em; }
+  .ai-bubble.assistant .katex-display{ margin: 0.5em 0; overflow-x: auto; overflow-y: hidden; }
   .ai-chat-form{
     flex: 0 0 auto;
     display: flex;
@@ -724,6 +876,7 @@
     .settings-panel{ width: calc(100vw - 44px); right: 22px; }
   }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 </head>
 <body data-ambient="transparent">
 
@@ -775,6 +928,25 @@
         <span class="switch-track"></span>
       </label>
     </div>
+    <div class="toggle-row">
+      Calendar
+      <label class="switch">
+        <input type="checkbox" id="toggleCalendar">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+  </div>
+
+  <h3>Calendar</h3>
+  <div class="settings-group">
+    <span class="field-label">Webcal / iCal (.ics) URL</span>
+    <input type="text" id="calendarUrlInput" placeholder="webcal://calendar.google.com/.../basic.ics">
+    <div class="ai-btn-row">
+      <button type="button" class="solid-btn" id="calendarSaveBtn">Save</button>
+      <button type="button" class="ghost-btn" id="calendarRefreshBtn">Refresh</button>
+    </div>
+    <p class="ai-test-status" id="calendarStatus"></p>
+    <p class="settings-hint">Works with the "secret address in iCal format" from Google Calendar, an Outlook or iCloud share link, or any public .ics feed. Shows what's on today and tomorrow. Some providers block cross-origin requests, so this falls back to a public CORS relay if a direct fetch fails.</p>
   </div>
 
   <h3>AI Assistant</h3>
@@ -796,7 +968,12 @@
     <span class="field-label">API key</span>
     <input type="password" id="aiKeyInput" placeholder="sk-...">
     <span class="field-label">Model</span>
-    <input type="text" id="aiModelInput" placeholder="gpt-4o-mini">
+    <input type="text" id="aiModelInput" placeholder="gemini-flash-lite-latest">
+    <div class="ai-btn-row">
+      <button type="button" class="solid-btn" id="aiSaveBtn">Save</button>
+      <button type="button" class="ghost-btn" id="aiTestBtn">Test endpoint</button>
+    </div>
+    <p class="ai-test-status" id="aiTestStatus"></p>
     <p class="settings-hint">Stored only in a cookie on this page — never sent anywhere but the endpoint above. Get a free Gemini key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a>. Leave this off and the AI pill falls back to Duck AI in a new tab.</p>
   </div>
 
@@ -831,9 +1008,7 @@
         <input type="text" id="searchInput" placeholder="Search, or press Enter to visit a site &nbsp;·&nbsp; press / to focus" autofocus>
       </div>
       <button type="button" class="ai-pill" id="aiButton" title="Ask Duck AI">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2.5c.55 4.1 2.3 6.4 6.4 7-4.1.55-6.4 2.3-7 6.4-.55-4.1-2.3-6.4-6.4-7 4.1-.55 6.4-2.3 7-6.4z"/>
-        </svg>
+        <img src="ai-star.svg" alt="" class="ai-star-icon" width="15" height="15">
         <span>AI</span>
       </button>
     </div>
@@ -849,20 +1024,6 @@
   </form>
 
   <div class="widgets-grid" id="widgetsGrid">
-    <section class="widget" id="widgetLinks" data-widget="links">
-      <h2>Quick Links</h2>
-      <ul class="links-list" id="linksList"></ul>
-      <button class="ghost-btn add-link-btn" id="addLinkBtn">+ Add a link</button>
-      <div class="add-link-form" id="addLinkForm">
-        <input type="text" id="linkName" placeholder="Name">
-        <input type="text" id="linkUrl" placeholder="URL (e.g. mail.google.com)">
-        <div class="add-link-actions">
-          <button type="button" class="solid-btn" id="saveLinkBtn">Save</button>
-          <button type="button" class="ghost-btn" id="cancelLinkBtn">Cancel</button>
-        </div>
-      </div>
-    </section>
-
     <section class="widget" id="widgetNotes" data-widget="notes">
       <h2>Notes</h2>
       <textarea class="notes-area" id="notesArea" placeholder="Jot something down — it stays here."></textarea>
@@ -873,7 +1034,25 @@
       <p class="quote-text" id="quoteText"></p>
       <p class="quote-attr" id="quoteAttr"></p>
     </section>
+
+    <section class="widget" id="widgetCalendar" data-widget="calendar">
+      <h2>Calendar</h2>
+      <div class="calendar-list" id="calendarList"></div>
+    </section>
   </div>
+
+  <section class="widget links-strip" id="widgetLinks" data-widget="links">
+    <h2>Quick Links</h2>
+    <div class="links-tiles" id="linksList"></div>
+    <div class="add-link-form" id="addLinkForm">
+      <input type="text" id="linkName" placeholder="Name">
+      <input type="text" id="linkUrl" placeholder="URL (e.g. mail.google.com)">
+      <div class="add-link-actions">
+        <button type="button" class="solid-btn" id="saveLinkBtn">Save</button>
+        <button type="button" class="ghost-btn" id="cancelLinkBtn">Cancel</button>
+      </div>
+    </div>
+  </section>
 </main>
 
 <div class="ai-modal-overlay" id="aiModalOverlay" hidden>
@@ -890,6 +1069,11 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Markdown + LaTeX rendering for the AI chat (loaded before the app script so both are ready when a reply arrives) -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
 <script>
 (function(){
@@ -974,7 +1158,9 @@
   function tick(){
     var now = new Date();
     var h = now.getHours(), m = now.getMinutes();
-    clockEl.innerHTML = pad(h) + '<span class="colon">:</span>' + pad(m);
+    var period = h >= 12 ? "PM" : "AM";
+    var h12 = h % 12; if(h12 === 0) h12 = 12;
+    clockEl.innerHTML = h12 + '<span class="colon">:</span>' + pad(m) + '<span class="period">' + period + '</span>';
     dateEl.textContent = now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
   }
   tick();
@@ -984,14 +1170,18 @@
   var greetingEl = document.getElementById("greeting");
   function timeGreeting(){
     var h = new Date().getHours();
-    if(h < 5) return "Still up";
-    if(h < 12) return "Good morning";
-    if(h < 17) return "Good afternoon";
-    if(h < 21) return "Good evening";
-    return "Good night";
+    if(h < 5) return { text: "Still up", punct: "?" };
+    if(h < 12) return { text: "Good morning", punct: "." };
+    if(h < 17) return { text: "Good afternoon", punct: "." };
+    if(h < 21) return { text: "Good evening", punct: "." };
+    return { text: "Good night", punct: "." };
+  }
+  function composeGreeting(){
+    var g = timeGreeting();
+    return g.text + (savedName ? ", " + savedName : "") + g.punct;
   }
   var savedName = getCookie("zen_name");
-  greetingEl.textContent = timeGreeting() + (savedName ? ", " + savedName : "");
+  greetingEl.textContent = composeGreeting();
   greetingEl.addEventListener("focus", function(){
     // On focus, drop to just the name portion for easy editing
     if(savedName) greetingEl.textContent = savedName;
@@ -1001,7 +1191,7 @@
     var val = greetingEl.textContent.replace(/\s+/g," ").trim();
     savedName = val;
     if(val){ setCookie("zen_name", val); } else { setCookie("zen_name", "", -1); }
-    greetingEl.textContent = timeGreeting() + (savedName ? ", " + savedName : "");
+    greetingEl.textContent = composeGreeting();
   }
   greetingEl.addEventListener("blur", commitGreeting);
   greetingEl.addEventListener("keydown", function(e){
@@ -1060,6 +1250,12 @@
   var aiKeyInput = document.getElementById("aiKeyInput");
   var aiModelInput = document.getElementById("aiModelInput");
   var aiButton = document.getElementById("aiButton");
+  var aiStarIcon = aiButton.querySelector(".ai-star-icon");
+  if(aiStarIcon){
+    aiStarIcon.addEventListener("error", function(){
+      aiStarIcon.replaceWith(Object.assign(document.createElement("span"), { className: "ai-star-icon ai-star-fallback", textContent: "✦" }));
+    }, { once: true });
+  }
 
   function applyAiConfigToUI(){
     toggleAiEnabled.checked = !!aiConfig.enabled;
@@ -1088,6 +1284,50 @@
 
   function aiIsConfigured(){ return !!(aiConfig.enabled && aiConfig.key); }
 
+  var aiSaveBtn = document.getElementById("aiSaveBtn");
+  var aiTestBtn = document.getElementById("aiTestBtn");
+  var aiTestStatus = document.getElementById("aiTestStatus");
+
+  aiSaveBtn.addEventListener("click", function(){
+    aiConfig.enabled = toggleAiEnabled.checked;
+    aiConfig.endpoint = aiEndpointInput.value.trim();
+    aiConfig.key = aiKeyInput.value.trim();
+    aiConfig.model = aiModelInput.value.trim();
+    saveAiConfig();
+    showToast("AI settings saved");
+  });
+
+  aiTestBtn.addEventListener("click", function(){
+    var testConfig = {
+      provider: aiConfig.provider,
+      key: aiKeyInput.value.trim(),
+      endpoint: aiEndpointInput.value.trim(),
+      model: aiModelInput.value.trim()
+    };
+    if(!testConfig.key){
+      aiTestStatus.textContent = "Add an API key first.";
+      aiTestStatus.className = "ai-test-status error";
+      return;
+    }
+    var original = aiConfig;
+    aiConfig = testConfig; // swap in briefly so callAI uses the in-progress field values
+    aiTestBtn.disabled = true;
+    aiTestBtn.textContent = "Testing…";
+    aiTestStatus.textContent = "";
+    aiTestStatus.className = "ai-test-status";
+    callAI([{ role: "user", content: "Reply with only the word OK." }]).then(function(reply){
+      aiTestStatus.textContent = "✓ Connected — replied: " + String(reply).slice(0, 60);
+      aiTestStatus.className = "ai-test-status ok";
+    }).catch(function(){
+      aiTestStatus.textContent = "✕ Couldn't connect — check the endpoint, model, and key.";
+      aiTestStatus.className = "ai-test-status error";
+    }).finally(function(){
+      aiConfig = original;
+      aiTestBtn.disabled = false;
+      aiTestBtn.textContent = "Test endpoint";
+    });
+  });
+
   /* ---------- AI chat modal ---------- */
   var aiModalOverlay = document.getElementById("aiModalOverlay");
   var aiMessages = document.getElementById("aiMessages");
@@ -1105,10 +1345,44 @@
   aiModalOverlay.addEventListener("click", function(e){ if(e.target === aiModalOverlay) closeAiModal(); });
   document.getElementById("aiModalClose").addEventListener("click", closeAiModal);
 
+  var mathDelimiters = [
+    { left: "$$", right: "$$", display: true },
+    { left: "\\[", right: "\\]", display: true },
+    { left: "$", right: "$", display: false },
+    { left: "\\(", right: "\\)", display: false }
+  ];
+
+  /* Renders an assistant reply as markdown, protecting LaTeX segments from
+     markdown's own escaping/emphasis rules first, then lets KaTeX typeset
+     them once the markdown HTML is in the DOM. Falls back to plain text if
+     the CDN libraries haven't loaded (e.g. offline). */
+  function renderAssistantContent(el, raw){
+    var mathStore = [];
+    var protectedText = raw.replace(/\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^\n$]+?\$|\\\([\s\S]+?\\\)/g, function(match){
+      mathStore.push(match);
+      return "@@MATH" + (mathStore.length - 1) + "@@";
+    });
+    var html;
+    if(typeof marked !== "undefined"){
+      html = marked.parse(protectedText);
+    } else {
+      html = protectedText.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
+    }
+    html = html.replace(/@@MATH(\d+)@@/g, function(_, i){ return mathStore[Number(i)]; });
+    el.innerHTML = html;
+    if(typeof renderMathInElement !== "undefined"){
+      renderMathInElement(el, { delimiters: mathDelimiters, throwOnError: false });
+    }
+  }
+
   function renderBubble(role, text){
     var div = document.createElement("div");
     div.className = "ai-bubble " + role;
-    div.textContent = text;
+    if(role === "assistant"){
+      renderAssistantContent(div, text);
+    } else {
+      div.textContent = text;
+    }
     aiMessages.appendChild(div);
     aiMessages.scrollTop = aiMessages.scrollHeight;
     return div;
@@ -1160,7 +1434,7 @@
     var placeholder = renderBubble("assistant", "…");
     callAI(chatHistory).then(function(reply){
       chatHistory.push({ role: "assistant", content: reply });
-      placeholder.textContent = reply;
+      renderAssistantContent(placeholder, reply);
       aiMessages.scrollTop = aiMessages.scrollHeight;
     }).catch(function(){
       placeholder.textContent = "Couldn't reach the endpoint — check the API key and endpoint in settings.";
@@ -1195,17 +1469,19 @@
   });
 
   /* ---------- Widget visibility ---------- */
-  var widgetPrefs = getJSON("zen_widgets", { links: true, notes: true, quote: true });
+  var widgetPrefs = getJSON("zen_widgets", { links: true, notes: true, quote: true, calendar: true });
   function applyWidgetPrefs(){
     document.getElementById("widgetLinks").style.display = widgetPrefs.links ? "" : "none";
     document.getElementById("widgetNotes").style.display = widgetPrefs.notes ? "" : "none";
     document.getElementById("widgetQuote").style.display = widgetPrefs.quote ? "" : "none";
+    document.getElementById("widgetCalendar").style.display = widgetPrefs.calendar ? "" : "none";
     document.getElementById("toggleLinks").checked = !!widgetPrefs.links;
     document.getElementById("toggleNotes").checked = !!widgetPrefs.notes;
     document.getElementById("toggleQuote").checked = !!widgetPrefs.quote;
+    document.getElementById("toggleCalendar").checked = !!widgetPrefs.calendar;
   }
   applyWidgetPrefs();
-  ["links","notes","quote"].forEach(function(key){
+  ["links","notes","quote","calendar"].forEach(function(key){
     document.getElementById("toggle" + key[0].toUpperCase() + key.slice(1)).addEventListener("change", function(e){
       widgetPrefs[key] = e.target.checked;
       setJSON("zen_widgets", widgetPrefs);
@@ -1223,29 +1499,39 @@
     if(!/^https?:\/\//i.test(u)) u = "https://" + u;
     return u;
   }
+  function hostnameOf(url){
+    try{ return new URL(url).hostname; } catch(e){ return ""; }
+  }
   function renderLinks(){
     linksList.innerHTML = "";
-    if(links.length === 0){
-      var empty = document.createElement("li");
-      empty.className = "links-empty";
-      empty.textContent = "No links yet — add your first below.";
-      linksList.appendChild(empty);
-      return;
-    }
     links.forEach(function(link, idx){
-      var li = document.createElement("li");
       var a = document.createElement("a");
-      a.className = "link-row";
+      a.className = "link-tile";
       a.href = link.url;
-      var avatar = document.createElement("span");
-      avatar.className = "link-avatar";
-      avatar.textContent = faviconLetter(link.name);
+      a.title = link.name;
+
+      var iconWrap = document.createElement("span");
+      iconWrap.className = "link-tile-icon";
+      var host = hostnameOf(link.url);
+      var img = document.createElement("img");
+      img.alt = "";
+      img.loading = "lazy";
+      img.src = host ? ("https://www.google.com/s2/favicons?sz=64&domain=" + encodeURIComponent(host)) : "";
+      var fallback = document.createElement("span");
+      fallback.className = "fallback-letter";
+      fallback.textContent = faviconLetter(link.name);
+      img.onerror = function(){ img.style.display = "none"; fallback.style.display = "flex"; };
+      if(!host){ img.style.display = "none"; fallback.style.display = "flex"; }
+      iconWrap.appendChild(img);
+      iconWrap.appendChild(fallback);
+
       var label = document.createElement("span");
-      label.className = "link-label";
+      label.className = "link-tile-label";
       label.textContent = link.name;
+
       var remove = document.createElement("button");
-      remove.className = "link-remove";
       remove.type = "button";
+      remove.className = "link-tile-remove";
       remove.textContent = "✕";
       remove.title = "Remove";
       remove.addEventListener("click", function(e){
@@ -1254,27 +1540,39 @@
         setJSON("zen_links", links);
         renderLinks();
       });
-      a.appendChild(avatar);
+
+      a.appendChild(iconWrap);
       a.appendChild(label);
       a.appendChild(remove);
-      li.appendChild(a);
-      linksList.appendChild(li);
+      linksList.appendChild(a);
     });
-  }
-  renderLinks();
 
-  var addLinkBtn = document.getElementById("addLinkBtn");
+    var addTile = document.createElement("button");
+    addTile.type = "button";
+    addTile.className = "link-tile add-tile";
+    addTile.title = "Add a link";
+    var addIcon = document.createElement("span");
+    addIcon.className = "link-tile-icon";
+    addIcon.textContent = "+";
+    var addLabel = document.createElement("span");
+    addLabel.className = "link-tile-label";
+    addLabel.textContent = "Add";
+    addTile.appendChild(addIcon);
+    addTile.appendChild(addLabel);
+    addTile.addEventListener("click", function(){
+      addLinkForm.classList.add("open");
+      linkName.focus();
+    });
+    linksList.appendChild(addTile);
+  }
+
   var addLinkForm = document.getElementById("addLinkForm");
   var linkName = document.getElementById("linkName");
   var linkUrl = document.getElementById("linkUrl");
-  addLinkBtn.addEventListener("click", function(){
-    addLinkForm.classList.add("open");
-    addLinkBtn.style.display = "none";
-    linkName.focus();
-  });
+  renderLinks();
+
   document.getElementById("cancelLinkBtn").addEventListener("click", function(){
     addLinkForm.classList.remove("open");
-    addLinkBtn.style.display = "";
     linkName.value = ""; linkUrl.value = "";
   });
   document.getElementById("saveLinkBtn").addEventListener("click", function(){
@@ -1286,7 +1584,6 @@
     renderLinks();
     linkName.value = ""; linkUrl.value = "";
     addLinkForm.classList.remove("open");
-    addLinkBtn.style.display = "";
   });
   [linkName, linkUrl].forEach(function(inp){
     inp.addEventListener("keydown", function(e){
@@ -1330,10 +1627,227 @@
   document.getElementById("quoteText").textContent = "\u201C" + pick[0] + "\u201D";
   document.getElementById("quoteAttr").textContent = "— " + pick[1];
 
+  /* ---------- Calendar (webcal / .ics agenda for today + tomorrow) ---------- */
+  var calendarUrlInput = document.getElementById("calendarUrlInput");
+  var calendarSaveBtn = document.getElementById("calendarSaveBtn");
+  var calendarRefreshBtn = document.getElementById("calendarRefreshBtn");
+  var calendarStatus = document.getElementById("calendarStatus");
+  var calendarList = document.getElementById("calendarList");
+  var calendarUrl = getCookie("zen_calendar_url") || "";
+  calendarUrlInput.value = calendarUrl;
+
+  function unfoldIcs(text){
+    return text.replace(/\r\n/g, "\n").replace(/\n[ \t]/g, "");
+  }
+  function unescapeIcsText(s){
+    return (s || "")
+      .replace(/\\n/gi, " ")
+      .replace(/\\,/g, ",")
+      .replace(/\\;/g, ";")
+      .replace(/\\\\/g, "\\");
+  }
+  function parseIcsDate(value){
+    var m;
+    if((m = value.match(/^(\d{4})(\d{2})(\d{2})$/))){
+      return { date: new Date(+m[1], +m[2]-1, +m[3]), isDateOnly: true };
+    }
+    if((m = value.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/))){
+      return { date: new Date(Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6])), isDateOnly: false };
+    }
+    if((m = value.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/))){
+      return { date: new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]), isDateOnly: false };
+    }
+    return null;
+  }
+  function parseIcsLine(line){
+    var idx = line.indexOf(":");
+    if(idx === -1) return null;
+    var left = line.slice(0, idx), value = line.slice(idx + 1);
+    var parts = left.split(";");
+    var name = parts[0].toUpperCase();
+    var params = {};
+    for(var i = 1; i < parts.length; i++){
+      var eq = parts[i].indexOf("=");
+      if(eq !== -1) params[parts[i].slice(0, eq).toUpperCase()] = parts[i].slice(eq + 1);
+    }
+    return { name: name, params: params, value: value };
+  }
+  function parseRrule(value){
+    var out = {};
+    value.split(";").forEach(function(pair){
+      var eq = pair.indexOf("=");
+      if(eq !== -1) out[pair.slice(0, eq).toUpperCase()] = pair.slice(eq + 1);
+    });
+    return out;
+  }
+  function parseIcs(text){
+    var lines = unfoldIcs(text).split("\n");
+    var events = [];
+    var cur = null;
+    for(var i = 0; i < lines.length; i++){
+      var raw = lines[i];
+      if(!raw) continue;
+      if(raw === "BEGIN:VEVENT"){ cur = {}; continue; }
+      if(raw === "END:VEVENT"){ if(cur) events.push(cur); cur = null; continue; }
+      if(!cur) continue;
+      var f = parseIcsLine(raw);
+      if(!f) continue;
+      if(f.name === "SUMMARY") cur.summary = unescapeIcsText(f.value);
+      else if(f.name === "DTSTART") cur.dtstart = parseIcsDate(f.params.VALUE === "DATE" ? f.value.slice(0,8) : f.value);
+      else if(f.name === "DTEND") cur.dtend = parseIcsDate(f.params.VALUE === "DATE" ? f.value.slice(0,8) : f.value);
+      else if(f.name === "RRULE") cur.rrule = parseRrule(f.value);
+    }
+    return events;
+  }
+  function expandOccurrences(evt, windowStart, windowEnd){
+    if(!evt.dtstart) return [];
+    if(!evt.rrule){
+      return (evt.dtstart.date >= windowStart && evt.dtstart.date <= windowEnd) ? [evt.dtstart.date] : [];
+    }
+    var dayMap = { SU:0, MO:1, TU:2, WE:3, TH:4, FR:5, SA:6 };
+    var rrule = evt.rrule;
+    var freq = rrule.FREQ;
+    var interval = parseInt(rrule.INTERVAL || "1", 10) || 1;
+    var count = rrule.COUNT ? parseInt(rrule.COUNT, 10) : null;
+    var until = rrule.UNTIL ? (parseIcsDate(rrule.UNTIL) || {}).date : null;
+    var byday = rrule.BYDAY ? rrule.BYDAY.split(",").map(function(s){ return s.replace(/^[+-]?\d*/, ""); }) : null;
+    var occurrences = [];
+    var cursor = new Date(evt.dtstart.date);
+    var seen = 0, iterations = 0;
+    while(cursor <= windowEnd && iterations < 3000){
+      iterations++;
+      var included = true;
+      if(byday && freq === "WEEKLY"){
+        var code = Object.keys(dayMap).find(function(k){ return dayMap[k] === cursor.getDay(); });
+        included = byday.indexOf(code) !== -1;
+      }
+      if(included){
+        seen++;
+        if(cursor >= windowStart && cursor <= windowEnd) occurrences.push(new Date(cursor));
+        if(count && seen >= count) break;
+      }
+      if(until && cursor > until) break;
+      if(freq === "DAILY"){ cursor.setDate(cursor.getDate() + interval); }
+      else if(freq === "WEEKLY"){
+        if(byday) cursor.setDate(cursor.getDate() + 1);
+        else cursor.setDate(cursor.getDate() + 7 * interval);
+      }
+      else if(freq === "MONTHLY"){ cursor.setMonth(cursor.getMonth() + interval); }
+      else if(freq === "YEARLY"){ cursor.setFullYear(cursor.getFullYear() + interval); }
+      else { break; }
+    }
+    return occurrences;
+  }
+
+  function renderCalendarState(kind, message){
+    calendarList.innerHTML = "";
+    var p = document.createElement("p");
+    p.className = "calendar-" + kind;
+    p.textContent = message;
+    calendarList.appendChild(p);
+  }
+
+  function renderCalendarEvents(items){
+    calendarList.innerHTML = "";
+    if(items.length === 0){
+      renderCalendarState("empty", "Nothing on the calendar for today or tomorrow.");
+      return;
+    }
+    var today = new Date(); today.setHours(0,0,0,0);
+    var tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+    var groups = {};
+    items.forEach(function(item){
+      var dayKey = item.date.toDateString();
+      if(!groups[dayKey]) groups[dayKey] = [];
+      groups[dayKey].push(item);
+    });
+    Object.keys(groups).sort(function(a,b){ return new Date(a) - new Date(b); }).forEach(function(dayKey){
+      var dayDate = new Date(dayKey);
+      var label = dayDate.toDateString() === today.toDateString() ? "Today"
+        : dayDate.toDateString() === tomorrow.toDateString() ? "Tomorrow"
+        : dayDate.toLocaleDateString(undefined, { weekday: "long" });
+      var group = document.createElement("div");
+      group.className = "calendar-day-group";
+      var heading = document.createElement("div");
+      heading.className = "calendar-day-label";
+      heading.textContent = label;
+      group.appendChild(heading);
+      groups[dayKey]
+        .sort(function(a,b){ return (a.isDateOnly ? -1 : a.date) - (b.isDateOnly ? -1 : b.date); })
+        .forEach(function(item){
+          var row = document.createElement("div");
+          row.className = "calendar-event";
+          var time = document.createElement("span");
+          time.className = "calendar-event-time";
+          time.textContent = item.isDateOnly ? "All day" : item.date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+          var title = document.createElement("span");
+          title.className = "calendar-event-title";
+          title.textContent = item.summary || "(untitled)";
+          row.appendChild(time);
+          row.appendChild(title);
+          group.appendChild(row);
+        });
+      calendarList.appendChild(group);
+    });
+  }
+
+  async function fetchIcsText(url){
+    var httpUrl = url.trim().replace(/^webcal:\/\//i, "https://");
+    try{
+      var res = await fetch(httpUrl);
+      if(res.ok) return await res.text();
+    } catch(e){ /* fall through to proxy */ }
+    var proxied = "https://api.allorigins.win/raw?url=" + encodeURIComponent(httpUrl);
+    var res2 = await fetch(proxied);
+    if(!res2.ok) throw new Error("HTTP " + res2.status);
+    return await res2.text();
+  }
+
+  async function loadCalendar(){
+    if(!calendarUrl){
+      renderCalendarState("empty", "Add a calendar link in Settings to see today's agenda.");
+      return;
+    }
+    renderCalendarState("loading", "Loading calendar…");
+    calendarStatus.textContent = "";
+    calendarStatus.className = "ai-test-status";
+    try{
+      var text = await fetchIcsText(calendarUrl);
+      var events = parseIcs(text);
+      var windowStart = new Date(); windowStart.setHours(0,0,0,0);
+      var windowEnd = new Date(windowStart); windowEnd.setDate(windowEnd.getDate() + 2); windowEnd.setMilliseconds(-1);
+      var items = [];
+      events.forEach(function(evt){
+        expandOccurrences(evt, windowStart, windowEnd).forEach(function(d){
+          items.push({ date: d, isDateOnly: evt.dtstart.isDateOnly, summary: evt.summary });
+        });
+      });
+      renderCalendarEvents(items);
+      calendarStatus.textContent = "✓ Loaded " + events.length + " event" + (events.length === 1 ? "" : "s") + " from the feed.";
+      calendarStatus.className = "ai-test-status ok";
+    } catch(err){
+      renderCalendarState("error", "Couldn't load the calendar — check the link in Settings.");
+      calendarStatus.textContent = "✕ Couldn't reach that calendar feed.";
+      calendarStatus.className = "ai-test-status error";
+    }
+  }
+
+  calendarSaveBtn.addEventListener("click", function(){
+    calendarUrl = calendarUrlInput.value.trim();
+    if(calendarUrl){ setCookie("zen_calendar_url", calendarUrl); } else { setCookie("zen_calendar_url", "", -1); }
+    showToast("Calendar link saved");
+    loadCalendar();
+  });
+  calendarRefreshBtn.addEventListener("click", function(){
+    calendarUrl = calendarUrlInput.value.trim();
+    loadCalendar();
+  });
+  loadCalendar();
+
   /* ---------- Reset ---------- */
   document.getElementById("resetAll").addEventListener("click", function(){
     if(!confirm("Reset greeting, links, notes and settings on this page?")) return;
-    ["zen_theme","zen_ambient","zen_name","zen_engine","zen_widgets","zen_links","zen_notes","zen_ai_config"].forEach(function(name){
+    ["zen_theme","zen_ambient","zen_name","zen_engine","zen_widgets","zen_links","zen_notes","zen_ai_config","zen_calendar_url"].forEach(function(name){
       setCookie(name, "", -1);
     });
     location.reload();
